@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "596527339946",
+    "project_id": "sports-app-9a328",
+    "storage_bucket": "sports-app-9a328.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596527339946:android:b92a93765325b9c4d433d3",
+        "android_client_info": {
+          "package_name": "com.example.sample_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALOrDnEu8RovkQV4Bm6fgGLzt3gfh9PJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596527339946:android:dcc778dc66e216f8d433d3",
+        "android_client_info": {
+          "package_name": "com.example.sports_ecom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALOrDnEu8RovkQV4Bm6fgGLzt3gfh9PJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
