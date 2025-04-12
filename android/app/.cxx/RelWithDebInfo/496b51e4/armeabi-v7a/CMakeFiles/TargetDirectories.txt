@@ -1,0 +1,2 @@
+C:/Users/ritaj/OneDrive/Desktop/Flutter/sports_ecom_app/android/app/.cxx/RelWithDebInfo/496b51e4/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/ritaj/OneDrive/Desktop/Flutter/sports_ecom_app/android/app/.cxx/RelWithDebInfo/496b51e4/armeabi-v7a/CMakeFiles/rebuild_cache.dir

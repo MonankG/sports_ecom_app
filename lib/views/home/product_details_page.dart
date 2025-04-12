@@ -25,13 +25,15 @@ class ProductDetailPage extends StatelessWidget {
             // Shoe Image
             SizedBox(
               height: 250,
-              child: Image.asset('assets/images/shoe.png'), // Replace with your image path
+              child: Image.asset(
+                  'assets/images/shoe.png'), // Replace with your image path
             ),
 
             // Info Section
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
@@ -91,7 +93,7 @@ class ProductDetailPage extends StatelessWidget {
                       _buildExpandableTile(
                         title: 'Material',
                         content:
-                        'Cotton, polyester, and spandex blend. Machine wash.',
+                            'Cotton, polyester, and spandex blend. Machine wash.',
                       ),
                       _buildExpandableTile(
                         title: 'Usage',
@@ -112,7 +114,8 @@ class ProductDetailPage extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey.shade200,
                                 foregroundColor: Colors.black,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -133,7 +136,8 @@ class ProductDetailPage extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF1E88E5),
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -160,7 +164,8 @@ class ProductDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildExpandableTile({required String title, required String content}) {
+  Widget _buildExpandableTile(
+      {required String title, required String content}) {
     return ExpansionTile(
       title: Text(
         title,

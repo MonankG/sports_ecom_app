@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sample_app/controllers/auth_controller.dart';
 import 'package:sample_app/controllers/product_controller.dart';
+import 'package:sample_app/controllers/cart_controller.dart';
 import 'package:sample_app/views/auth/login.dart';
 import 'package:sample_app/views/home/homepage.dart';
+import 'package:sample_app/controllers/wishlist_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +15,8 @@ void main() async {
   // Register AuthController before the app starts
   Get.put(AuthController());
   Get.put(ProductController());
+  Get.put(CartController());
+  Get.put(WishlistController());
 
   runApp(MyApp());
 }
