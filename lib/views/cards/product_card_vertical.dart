@@ -29,7 +29,7 @@ class ProductVerticalCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Get.to(() => ProductDetails(product: product));
+        Get.to(() => ProductDetails(product: product) ,preventDuplicates: true, transition: Transition.noTransition);
       },
       child: Container(
         width: 160,

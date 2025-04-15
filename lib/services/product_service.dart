@@ -8,22 +8,25 @@ class ProductService {
     try {
       // Get products from Firestore
       final snapshot =
-          await FirebaseFirestore.instance.collection('products').get();
+          await FirebaseFirestore.instance.collection('Products').get();
 
       // Convert to list of Products
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return Product(
-          id: doc.id,
-          name: data['name'] ?? '',
-          category: data['category'] ?? '',
-          description: data['description'] ?? '',
-          price: (data['price'] ?? 0).toDouble(),
-          stockQuantity: data['stockQuantity'] ?? 0,
-          imageUrl: data['imageUrl'] ?? '',
-          featured: data['featured'] ?? false,
-        );
-      }).toList();
+      List<Product> products = [];
+
+      for (var doc in snapshot.docs) {
+        try {
+          Map<String, dynamic> data = doc.data();
+          Product product = Product.fromFirestore(data, doc.id);
+          products.add(product);
+          print('Successfully added: ${product.name}');
+        } catch (e) {
+          print('Error processing product document ${doc.id}: $e');
+          continue;
+        }
+      }
+
+      print('Finished processing products, returning ${products.length} items');
+      return products;
     } catch (e) {
       print('Error fetching products: $e');
       return [];

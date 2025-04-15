@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../models/product_model.dart';
-import '../models/cart_item.dart';
 import 'auth_controller.dart';
 
 class CartItem {
@@ -26,74 +26,150 @@ class CartController extends GetxController {
   final RxDouble shippingCost = 5.99.obs;
   final RxDouble taxRate = 0.08.obs; // 8% tax rate
 
+  // Stream subscription for real-time cart updates
+  StreamSubscription<DocumentSnapshot>? _cartSubscription;
+  // Document ID for the user's cart
+  String? _cartDocId;
+
   @override
   void onInit() {
     super.onInit();
-    // Load cart when user changes
+    // Listen for user changes
     ever(_authController.firebaseUser, (_) {
-      _loadCartFromFirebase();
+      _fetchOrCreateCart();
     });
   }
 
-  // Load cart from Firebase
-  Future<void> _loadCartFromFirebase() async {
-    if (_authController.firebaseUser.value == null) {
+  @override
+  void onClose() {
+    // Cancel subscription when controller is closed
+    _cartSubscription?.cancel();
+    super.onClose();
+  }
+
+  // Fetch existing cart or create a new one
+  Future<void> _fetchOrCreateCart() async {
+    // Cancel any existing subscription
+    _cartSubscription?.cancel();
+
+    final user = _authController.firebaseUser.value;
+    if (user == null) {
+      print('Cannot fetch cart: User not logged in');
       items.clear();
+      _cartDocId = null;
       return;
     }
 
-    try {
-      isLoading.value = true;
-      String userId = _authController.firebaseUser.value!.uid;
+    isLoading.value = true;
+    String userId = user.uid;
+    print('Fetching cart for user: $userId');
 
-      DocumentSnapshot cartDoc = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('cart')
-          .doc('items')
+    try {
+      // Try to find an existing cart for this user
+      QuerySnapshot cartQuery = await _firestore
+          .collection('Cart')
+          .where('userId', isEqualTo: userId)
+          .limit(1)
           .get();
 
-      if (!cartDoc.exists) {
-        items.clear();
-        return;
+      if (cartQuery.docs.isNotEmpty) {
+        // Existing cart found
+        _cartDocId = cartQuery.docs.first.id;
+        print('Found existing cart: $_cartDocId');
+      } else {
+        // Create a new cart for this user
+        print('Creating new cart for user: $userId');
+
+        // First, create a document with a generated ID, which should be allowed
+        // since it's a transaction with no document yet to check against
+        DocumentReference docRef = _firestore.collection('Cart').doc();
+        _cartDocId = docRef.id;
+
+        // Then set the data with the document ID we now know
+        await docRef.set({
+          'userId': userId,
+          'items': [],
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        print('Created new cart: $_cartDocId');
       }
 
-      Map<String, dynamic> data = cartDoc.data() as Map<String, dynamic>;
-      List<dynamic> itemsData = data['items'] ?? [];
-
-      items.clear();
-
-      for (var item in itemsData) {
-        DocumentSnapshot productDoc = await _firestore
-            .collection('Products')
-            .doc(item['productId'])
-            .get();
-
-        if (productDoc.exists) {
-          Product product = Product.fromFirestore(
-            productDoc.data() as Map<String, dynamic>,
-            productDoc.id,
-          );
-
-          items.add(CartItem(
-            product: product,
-            quantity: item['quantity'] ?? 1,
-          ));
-        }
-      }
+      // Set up real-time listener for the cart
+      _setupCartListener();
     } catch (e) {
-      print('Error loading cart: $e');
-    } finally {
+      print('Error fetching/creating cart: $e');
       isLoading.value = false;
     }
   }
 
+  // Set up real-time listener for cart updates
+  void _setupCartListener() {
+    if (_cartDocId == null) return;
+
+    _cartSubscription = _firestore
+        .collection('Cart')
+        .doc(_cartDocId)
+        .snapshots()
+        .listen((snapshot) async {
+      if (!snapshot.exists) {
+        items.clear();
+        isLoading.value = false;
+        return;
+      }
+
+      try {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<dynamic> itemsData = data['items'] ?? [];
+
+        // Create a temporary list to hold updated items
+        List<CartItem> updatedItems = [];
+
+        for (var item in itemsData) {
+          // Get product details
+          DocumentSnapshot productDoc = await _firestore
+              .collection('Products')
+              .doc(item['productId'])
+              .get();
+
+          if (productDoc.exists) {
+            Product product = Product.fromFirestore(
+              productDoc.data() as Map<String, dynamic>,
+              productDoc.id,
+            );
+
+            updatedItems.add(CartItem(
+              product: product,
+              quantity: item['quantity'] ?? 1,
+            ));
+          }
+        }
+
+        // Update items list with new data
+        items.assignAll(updatedItems);
+      } catch (e) {
+        print('Error processing cart update: $e');
+      } finally {
+        isLoading.value = false;
+      }
+    }, onError: (error) {
+      print('Error listening to cart changes: $error');
+      isLoading.value = false;
+    });
+  }
+
   // Save cart to Firebase
   Future<void> _saveCartToFirebase() async {
-    if (_authController.firebaseUser.value == null) return;
+    if (_authController.firebaseUser.value == null) {
+      print('Cannot save cart: User not logged in');
+      return;
+    }
+
+    print('Current user: ${_authController.firebaseUser.value!.uid}');
 
     try {
-      String userId = _authController.firebaseUser.value!.uid;
+      print('Saving cart to Firebase: $_cartDocId with ${items.length} items');
 
       List<Map<String, dynamic>> itemsData = items
           .map((item) => {
@@ -102,109 +178,132 @@ class CartController extends GetxController {
               })
           .toList();
 
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('cart')
-          .doc('items')
-          .set({
+      await _firestore.collection('Cart').doc(_cartDocId).update({
         'items': itemsData,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      print('Successfully saved cart to Firebase');
     } catch (e) {
-      print('Error saving cart: $e');
+      print('Error saving cart to Firebase: $e');
+
+      // If the document doesn't exist, try to create it
+      if (e is FirebaseException && e.code == 'not-found') {
+        try {
+          print('Attempting to create new cart document');
+          String userId = _authController.firebaseUser.value!.uid;
+
+          List<Map<String, dynamic>> itemsData = items
+              .map((item) => {
+                    'productId': item.product.id,
+                    'quantity': item.quantity.value,
+                  })
+              .toList();
+
+          await _firestore.collection('Cart').doc(_cartDocId).set({
+            'userId': userId,
+            'items': itemsData,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
+          print('Created new cart document successfully');
+        } catch (innerError) {
+          print('Error creating new cart document: $innerError');
+        }
+      }
     }
   }
 
-  // Add a product to cart
+  // Add item to cart
   void addToCart(Product product) {
-    // Check if product exists in cart
-    final existingIndex =
-        items.indexWhere((item) => item.product.id == product.id);
+    int index = items.indexWhere((item) => item.product.id == product.id);
 
-    if (existingIndex >= 0) {
+    if (index != -1) {
       // Product already in cart, increase quantity
-      final currentQuantity = items[existingIndex].quantity.value;
-      if (currentQuantity < product.stockQuantity) {
-        items[existingIndex].quantity.value++;
-      }
+      items[index].quantity.value++;
     } else {
       // Add new product to cart
       items.add(CartItem(product: product));
     }
 
-    _saveCartToFirebase();
+    // Ensure we have a cart document ID before saving
+    if (_cartDocId == null) {
+      // Create a cart first, then save
+      _fetchOrCreateCart().then((_) {
+        _saveCartToFirebase();
+      });
+    } else {
+      // Save to Firebase directly
+      _saveCartToFirebase();
+    }
 
-    Get.snackbar(
-      'Added to Cart',
-      '${product.name} has been added to your cart',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-    );
+    // Print for debugging
+    print(
+        'Added ${product.name} to cart. Cart has ${items.length} items. CartID: $_cartDocId');
   }
 
-  // Remove a product from cart
+  // Remove item from cart
   void removeFromCart(String productId) {
     items.removeWhere((item) => item.product.id == productId);
     _saveCartToFirebase();
   }
 
-  // Decrease quantity of a product
+  // Decrease quantity
   void decreaseQuantity(String productId) {
-    final index = items.indexWhere((item) => item.product.id == productId);
-    if (index >= 0) {
+    int index = items.indexWhere((item) => item.product.id == productId);
+
+    if (index != -1) {
       if (items[index].quantity.value > 1) {
         items[index].quantity.value--;
-        _saveCartToFirebase();
       } else {
-        // Remove if quantity becomes 0
-        removeFromCart(productId);
+        items.removeAt(index);
       }
+      _saveCartToFirebase();
     }
   }
 
-  // Get quantity of a product
-  int getQuantity(String productId) {
-    final index = items.indexWhere((item) => item.product.id == productId);
-    return index >= 0 ? items[index].quantity.value : 0;
-  }
-
-  // Clear the entire cart
+  // Clear cart
   void clearCart() {
     items.clear();
     _saveCartToFirebase();
   }
 
-  // Calculate subtotal (before shipping and tax)
+  // Calculate subtotal
   double get subtotal {
-    double total = 0;
-    for (var item in items) {
-      total += item.product.price * item.quantity.value;
-    }
-    return total;
+    return items.fold(
+        0, (sum, item) => sum + (item.product.price * item.quantity.value));
   }
 
-  // Calculate tax amount
+  // Calculate tax
+  double get tax {
+    return subtotal * taxRate.value;
+  }
+
+  // Calculate total
+  double get total {
+    return subtotal + tax + shippingCost.value;
+  }
+
+  // Get total items count
+  int get totalItems {
+    return items.fold(0, (sum, item) => sum + item.quantity.value);
+  }
+
+  // Add this method to your CartController class
+  int getQuantity(String productId) {
+    final index = items.indexWhere((item) => item.product.id == productId);
+    if (index == -1) return 0;
+    return items[index].quantity.value;
+  }
+
+  // Add this getter to your CartController class
   double get taxAmount {
     return subtotal * taxRate.value;
   }
 
-  // Calculate total (including shipping and tax)
-  double get total {
-    return subtotal + shippingCost.value + taxAmount;
-  }
-
-  // Check if product is in cart
+  // Add this method to your CartController class
   bool isInCart(String productId) {
     return items.any((item) => item.product.id == productId);
-  }
-
-  // Get total number of items in cart
-  int get itemCount {
-    int count = 0;
-    for (var item in items) {
-      count += item.quantity.value;
-    }
-    return count;
   }
 }

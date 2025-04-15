@@ -21,6 +21,13 @@ class ProductDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      // Safety check for product
+    if (product == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Product Not Found')),
+        body: Center(child: Text('The product details could not be loaded.')),
+      );
+    }
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -51,11 +58,15 @@ class ProductDetails extends StatelessWidget {
               ),
               onPressed: () {
                 wishlistController.toggleWishlist(product);
-                final message = isInWishlist
-                    ? 'Removed from wishlist'
-                    : 'Added to wishlist';
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(message)));
+                // Optional: Show a snackbar for feedback
+                Get.snackbar(
+                  isInWishlist ? 'Removed from Wishlist' : 'Added to Wishlist',
+                  isInWishlist
+                      ? '${product.name} removed from your wishlist'
+                      : '${product.name} added to your wishlist',
+                  snackPosition: SnackPosition.BOTTOM,
+                  duration: Duration(seconds: 2),
+                );
               },
             );
           }),
@@ -78,10 +89,7 @@ class ProductDetails extends StatelessWidget {
                         height: screenHeight * 0.45,
                         width: double.infinity,
                         color: Colors.grey[100],
-                        child: Hero(
-                          tag: 'product-${product.id}',
-                          child: _buildProductImage(),
-                        ),
+                        child: _buildProductImage(),
                       ),
 
                       // Stock indicator
@@ -238,8 +246,14 @@ class ProductDetails extends StatelessWidget {
 
                         // Quantity Selector (if already in cart)
                         Obx(() {
-                          if (cartController.isInCart(product.id)) {
-                            return _buildQuantitySelector();
+                          try {
+                            if (product != null &&
+                                cartController != null &&
+                                cartController.isInCart(product.id)) {
+                              return _buildQuantitySelector();
+                            }
+                          } catch (e) {
+                            print('Error checking if product is in cart: $e');
                           }
                           return const SizedBox.shrink();
                         }),

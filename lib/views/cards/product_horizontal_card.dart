@@ -44,12 +44,13 @@ class ProductHorizontalCard extends StatelessWidget {
           // Make sure to use proper import for ProductDetails
           // Try both naming variations
           try {
-            Get.to(() => ProductDetails(product: product));
+            Get.to(() => ProductDetails(product: product) ,preventDuplicates: true, transition: Transition.noTransition);
           } catch (e) {
             print('Error navigating: $e');
             // Try alternate product detail page name if it exists
             try {
-              Get.to(() => ProductDetails(product: product));
+              Get.to(() => ProductDetails(product: product),
+                  preventDuplicates: true, transition: Transition.noTransition);
             } catch (e2) {
               print('Error on second attempt: $e2');
             }
@@ -73,19 +74,15 @@ class ProductHorizontalCard extends StatelessWidget {
           child: Row(
             children: [
               // Product Image
-              Hero(
-                // Add Hero animation for smooth transition
-                tag: 'product-${product.id}',
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                  ),
-                  child: SizedBox(
-                    width: 110,
-                    height: 110,
-                    child: _buildProductImage(),
-                  ),
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                ),
+                child: SizedBox(
+                  width: 110,
+                  height: 110,
+                  child: _buildProductImage(),
                 ),
               ),
 
