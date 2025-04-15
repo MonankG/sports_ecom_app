@@ -1,18 +1,20 @@
 import 'package:get/get.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';
+import 'dart:async';
 
 class ProductController extends GetxController {
   final ProductService _productService = ProductService();
+  Timer? _debounce;
 
-  var products = <Product>[].obs;
-  var filteredProducts = <Product>[].obs;
-  var isLoading = false.obs;
-
-  // Filters
-  var selectedCategory = 'All'.obs;
-  var sortOption = 'Featured'.obs;
-  var selectedPrice = 0.0.obs;
+  // Observable properties
+  final RxList<Product> products = <Product>[].obs;
+  final RxBool isLoading = true.obs;
+  final RxString selectedCategory = 'All'.obs;
+  final RxString sortOption = 'Featured'.obs;
+  final RxDouble selectedPrice = 0.0.obs;
+  final RxString searchQuery = ''.obs;
+  final RxBool isSearching = false.obs;
 
   @override
   void onInit() {
@@ -20,64 +22,125 @@ class ProductController extends GetxController {
     fetchProducts();
   }
 
-  void fetchProducts() async {
+  // Fetch all products
+  Future<void> fetchProducts() async {
     try {
-      isLoading.value = true;
-      products.value = await _productService.fetchProducts();
-      applyFilters();
+      isLoading(true);
+      var productsList = await _productService.fetchProducts();
+      products.value = productsList;
+    } catch (e) {
+      print('Error fetching products: $e');
     } finally {
-      isLoading.value = false;
+      isLoading(false);
     }
   }
 
-  // Filter by category
+  // Set category filter
   void setCategory(String category) {
     selectedCategory.value = category;
-    applyFilters();
   }
 
-  // Sort option (e.g., Featured, Newest, LowToHigh, HighToLow)
+  // Set sorting option
   void setSortOption(String option) {
     sortOption.value = option;
-    applyFilters();
   }
 
-  // Price filter
+  // Set price filter
   void setPriceFilter(double price) {
-    selectedPrice.value = price;
-    applyFilters();
+    if (selectedPrice.value == price) {
+      // Toggle off if already selected
+      selectedPrice.value = 0.0;
+    } else {
+      selectedPrice.value = price;
+    }
   }
 
-  // Apply all filters and sorting
-  void applyFilters() {
-    List<Product> tempList = [...products];
+  // Update your search query
+  void updateSearchQuery(String query) {
+    print('Updating search query to: $query');
+    searchQuery.value = query;
+  }
 
-    // Filter by category
+  // Clear search
+  void clearSearch() {
+    searchQuery.value = '';
+    isSearching.value = false;
+  }
+
+  // Toggle search state
+  void toggleSearch() {
+    isSearching.value = !isSearching.value;
+    if (!isSearching.value) {
+      clearSearch();
+    }
+  }
+
+  // Get filtered and sorted products
+  List<Product> get filteredProducts {
+    // Start with all products
+    List<Product> result = List.from(products);
+
+    // Apply search filter if we have a search query
+    if (searchQuery.value.isNotEmpty) {
+      final query = searchQuery.value.toLowerCase();
+      print('Filtering by search: "$query"');
+      result = result
+          .where((p) =>
+              p.name.toLowerCase().contains(query) ||
+              p.category.toLowerCase().contains(query) ||
+              (p.description?.toLowerCase().contains(query) ?? false))
+          .toList();
+      print('Search results count: ${result.length}');
+    }
+
+    // Apply category filter
     if (selectedCategory.value != 'All') {
-      tempList = tempList.where((p) => p.category == selectedCategory.value).toList();
+      result = result
+          .where((p) =>
+              p.category.toLowerCase() == selectedCategory.value.toLowerCase())
+          .toList();
     }
 
-    // Filter by price
-    if (selectedPrice.value > 0 && selectedPrice.value <= 3000) {
-      tempList = tempList.where((p) => p.price <= selectedPrice.value).toList();
-    } else if (selectedPrice.value > 3000) {
-      tempList = tempList.where((p) => p.price > 3000).toList();
+    // Apply price filter
+    if (selectedPrice.value > 0) {
+      if (selectedPrice.value == 3001.0) {
+        // "Over $3000"
+        result = result.where((p) => p.price >= 3000).toList();
+      } else {
+        // "Under $X"
+        result = result.where((p) => p.price <= selectedPrice.value).toList();
+      }
     }
 
-    // Sort logic
+    // Apply sorting
     switch (sortOption.value) {
       case 'LowToHigh':
-        tempList.sort((a, b) => a.price.compareTo(b.price));
+        result.sort((a, b) => a.price.compareTo(b.price));
         break;
       case 'HighToLow':
-        tempList.sort((a, b) => b.price.compareTo(a.price));
+        result.sort((a, b) => b.price.compareTo(a.price));
         break;
       case 'Featured':
       default:
-      // Leave as-is for Featured (or apply your own logic)
-        break;
+        // Sort by featured first, then by newest
+        result.sort((a, b) {
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+
+          // If both have same featured status, sort by date
+          if (a.dateAdded != null && b.dateAdded != null) {
+            return b.dateAdded!.compareTo(a.dateAdded!);
+          }
+          return 0;
+        });
     }
 
-    filteredProducts.value = tempList;
+    return result;
+  }
+
+  @override
+  void onClose() {
+    _debounce?.cancel();
+    super.onClose();
   }
 }
