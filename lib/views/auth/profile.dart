@@ -271,7 +271,14 @@ class UserProfile extends StatelessWidget {
                     _buildListItem(
                       title: 'Payment Methods',
                       icon: Icons.credit_card,
-                      onTap: () => Get.to(() => PaymentMethods()),
+                      onTap: () {
+                        // Navigate to reviews page when implemented
+                        Get.snackbar(
+                          'Coming Soon',
+                          'Reviews feature will be available soon!',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
                     ),
                     SizedBox(height: 20),
                     Center(
