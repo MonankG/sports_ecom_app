@@ -169,7 +169,7 @@ class ProductDetails extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              '\$${product.price.toStringAsFixed(2)}',
+                              '\₹${product.price.toStringAsFixed(2)}',
                               style: GoogleFonts.lexend(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,

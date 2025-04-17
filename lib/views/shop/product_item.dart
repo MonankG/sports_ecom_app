@@ -66,7 +66,7 @@ class ProductItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '\$${product.price.toStringAsFixed(2)}',
+                          '\₹${product.price.toStringAsFixed(2)}',
                           style: GoogleFonts.lexend(
                             color: Colors.blue[800],
                             fontWeight: FontWeight.bold,
