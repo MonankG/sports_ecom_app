@@ -175,7 +175,7 @@ class ProductVerticalCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "\$${product.price.toStringAsFixed(2)}",
+                            "\₹${product.price.toStringAsFixed(2)}",
                             style: GoogleFonts.lexend(
                               fontSize: 14, // Smaller font
                               fontWeight: FontWeight.bold,

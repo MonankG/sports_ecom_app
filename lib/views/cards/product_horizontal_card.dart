@@ -121,7 +121,7 @@ class ProductHorizontalCard extends StatelessWidget {
                         children: [
                           // Price display
                           Text(
-                            '\$${product.price.toStringAsFixed(2)}',
+                            '\₹${product.price.toStringAsFixed(2)}',
                             style: GoogleFonts.lexend(
                               color: Colors.blue[800],
                               fontWeight: FontWeight.bold,
