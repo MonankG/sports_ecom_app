@@ -72,6 +72,8 @@ class Homepage extends StatelessWidget {
       ),
     );
   }
+
+  void changeIndex(int i) {}
 }
 
 class HomeScreen extends StatelessWidget {
@@ -526,4 +528,6 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  void changeIndex(int i) {}
 }
