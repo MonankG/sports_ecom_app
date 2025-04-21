@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sample_app/views/home/homepage.dart';
+import 'package:sample_app/views/shop/shop.dart';
 import '../../controllers/wishlist_controller.dart';
 import '../cards/product_horizontal_card.dart';
 
@@ -9,6 +11,7 @@ class WishList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     // Make sure WishlistController is registered
     final WishlistController wishlistController;
     if (Get.isRegistered<WishlistController>()) {
@@ -17,7 +20,10 @@ class WishList extends StatelessWidget {
       wishlistController = Get.put(WishlistController());
     }
 
+    final HomepageController controller = Get.put(HomepageController());
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,
@@ -102,7 +108,9 @@ class WishList extends StatelessWidget {
                 ),
                 SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    controller.changeIndex(1); // Navigate to Shop page
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red[400],
                     padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
@@ -114,6 +122,7 @@ class WishList extends StatelessWidget {
                     'Start Shopping',
                     style: GoogleFonts.lexend(
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -205,6 +214,7 @@ class WishList extends StatelessWidget {
                 style: GoogleFonts.lexend(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  color: Colors.white,
                 ),
               ),
             ),

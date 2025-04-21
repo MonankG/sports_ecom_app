@@ -5,6 +5,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter/services.dart';
 import '../../controllers/product_controller.dart';
 import '../../models/product_model.dart';
+import '../home/homepage.dart';
 import './product_item.dart';
 import '../../views/cart/cart.dart'; // Import your cart screen
 
@@ -17,6 +18,7 @@ class Shop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Make sure ProductController is registered only once
+    final HomepageController controller = Get.put(HomepageController());
     final ProductController productController;
     if (Get.isRegistered<ProductController>()) {
       productController = Get.find<ProductController>();
@@ -84,7 +86,7 @@ class Shop extends StatelessWidget {
                 icon: const Icon(Icons.shopping_cart, color: Colors.black),
                 onPressed: () {
                   try {
-                    Get.to(() => UserCart());
+                    controller.changeIndex(2); // Navigate to cart
                   } catch (e) {
                     print('Error navigating to cart: $e');
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -417,11 +419,11 @@ class FilterOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<ProductController>();
     final priceRanges = {
-      'Under \$500': 500.0,
-      'Under \$1000': 1000.0,
-      'Under \$2000': 2000.0,
-      'Under \$3000': 3000.0,
-      'Over \$3000': 3001.0,
+      'Under ₹500': 500.0,
+      'Under ₹1000': 1000.0,
+      'Under ₹2000': 2000.0,
+      'Under ₹3000': 3000.0,
+      'Over ₹3000': 3001.0,
     };
 
     return Obx(() => Wrap(

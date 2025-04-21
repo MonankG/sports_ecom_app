@@ -25,7 +25,9 @@ class MyOrders extends StatelessWidget {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Get.back();
+          },
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
