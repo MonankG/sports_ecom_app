@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sample_app/views/auth/login.dart';
 import 'package:sample_app/views/auth/signupform.dart';
+import 'package:sample_app/views/auth/verifyemailpage.dart';
 
 import '../../controllers/auth_controller.dart';
 
@@ -99,6 +101,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 emailController.text.trim(),
                                 passwordController.text.trim()
                             );
+                            Get.to(() => VerifyEmailPage());
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
@@ -118,7 +121,9 @@ class _SignUpPageState extends State<SignUpPage> {
                       const SizedBox(height: 20),
                       Center(
                         child: GestureDetector(
-                          onTap: () {},
+                          onTap: () {
+                            Get.to(() => LoginPage());
+                          },
                           child: Text(
                             'Already a member? Switch to Sign In.',
                             style: GoogleFonts.lexend(color: Colors.blue),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sample_app/views/auth/login.dart';
+import 'package:sample_app/views/home/homepage.dart';
 
 import '../../controllers/auth_controller.dart';
 
@@ -105,6 +106,7 @@ class _UserDetailsFormPageState extends State<UserDetailsFormPage> {
                                 dob: dobController.text.trim(),
                                 password: passwordController.text.trim()
                             );
+                            Get.to(() => Homepage());
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
